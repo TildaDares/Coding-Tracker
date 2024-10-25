@@ -23,14 +23,14 @@ public class Menu
             switch (choice)
             {
                 case MenuOptions.InsertCodingSession:
-                    InsertCodingLog();
+                    InsertCodingSession();
                     break;
-                // case "2":
-                //     GetHabit();
+                // case MenuOptions.GetCodingSession:
+                //     GetCodingLog();
                 //     break;
-                // case "3":
-                //     GetHabits();
-                //     break;
+                case MenuOptions.GetCodingSessions:
+                    GetCodingSessions();
+                    break;
                 // case "4":
                 //     UpdateHabit();
                 //     break;
@@ -50,7 +50,7 @@ public class Menu
         }
     }
 
-    private void InsertCodingLog()
+    private void InsertCodingSession()
     {
         Console.Clear();
         var startTime = GetDateInput(
@@ -66,6 +66,34 @@ public class Menu
         ContinueMenu();
     }
 
+    private void GetCodingSessions()
+    {
+        Console.Clear();
+        var sessions = _database.GetAllCodingSessions();
+        if (sessions.Count == 0)
+        {
+            Console.WriteLine("No coding sessions found!");
+            ContinueMenu();
+            return;
+        }
+        
+        var panel = new Panel("All Coding Sessions records:")
+        {
+            Border = BoxBorder.Ascii
+        };
+        var table = new Table();
+        BuildTableHeader(table);
+    
+        foreach (var session in sessions)
+        {
+            BuildTableRows(table, session);
+        }
+        
+        AnsiConsole.Write(panel);
+        AnsiConsole.Write(table);
+        ContinueMenu();
+    }
+    
     private DateTime GetDateInput(string message, DateTime? minRange = null, DateTime? maxRange = null)
     {
         Console.Clear();
@@ -85,5 +113,18 @@ public class Menu
     {
         AnsiConsole.MarkupLine("\n[green]Press any key to continue...[/]");
         Console.ReadLine();
+    }
+
+    private void BuildTableHeader(Table table)
+    {
+        table.AddColumn(new TableColumn("[yellow]Id[/]").Centered());
+        table.AddColumn(new TableColumn("[yellow]StartTime[/]").Centered());
+        table.AddColumn(new TableColumn("[yellow]EndTime[/]").Centered());
+        table.AddColumn(new TableColumn("[yellow]Duration (Days:Hrs:Mins:Secs)[/]").Centered());
+    }
+    
+    private void BuildTableRows(Table table, CodingSession codingSession)
+    {
+        table.AddRow($"[blue]{codingSession.Id}[/]", $"[blue]{codingSession.StartTime}[/]", $"[blue]{codingSession.EndTime}[/]", $"[blue]{codingSession.Duration}[/]");
     }
 }

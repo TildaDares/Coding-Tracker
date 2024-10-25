@@ -35,6 +35,29 @@ public class CodingTrackerDatabase
         }
     }
     
+    public List<CodingSession> GetAllCodingSessions()
+    {
+        using var connection = new SqliteConnection(this.ConnectionString);
+        var sessions = new List<CodingSession>();
+        try
+        {
+            connection.Open();
+            const string sql = "SELECT * FROM codingTracker";
+            sessions = connection.Query<CodingSession>(sql).ToList();
+            return sessions;
+        }
+        catch (SqliteException e)
+        {
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve all coding session records. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+        
+        return sessions;
+    }
+    
     private void CreateCodingTrackerDB()
     {
         using var connection = new SqliteConnection(ConnectionString);
@@ -56,5 +79,4 @@ public class CodingTrackerDatabase
             connection.Close();
         }
     }
-            
 }
