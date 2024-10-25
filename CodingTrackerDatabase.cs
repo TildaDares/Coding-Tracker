@@ -34,6 +34,28 @@ public class CodingTrackerDatabase
             connection.Close();
         }
     }
+
+    public CodingSession GetCodingSession(int codingSessionId)
+    {
+        using var connection = new SqliteConnection(this.ConnectionString);
+        CodingSession session = null;
+        try
+        {
+            connection.Open();
+            const string sql = "SELECT * FROM codingTracker WHERE id = @id";
+            session = connection.QuerySingleOrDefault<CodingSession>(sql, new { id = codingSessionId });
+        }
+        catch (SqliteException e)
+        {
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding session record with ID: {codingSessionId}. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+        
+        return session;
+    }
     
     public List<CodingSession> GetAllCodingSessions()
     {
@@ -44,7 +66,6 @@ public class CodingTrackerDatabase
             connection.Open();
             const string sql = "SELECT * FROM codingTracker";
             sessions = connection.Query<CodingSession>(sql).ToList();
-            return sessions;
         }
         catch (SqliteException e)
         {
@@ -56,6 +77,28 @@ public class CodingTrackerDatabase
         }
         
         return sessions;
+    }
+    
+    public long CountCodingSessions()
+    {
+        using var connection = new SqliteConnection(this.ConnectionString);
+        var count = 0;
+        try
+        {
+            connection.Open();
+            const string sql = "SELECT COUNT(*) FROM codingTracker";
+            count = connection.ExecuteScalar<int>(sql);
+        } 
+        catch (SqliteException e)
+        {
+            AnsiConsole.MarkupLine($"[red]Unable to count coding session records. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+
+        return count;
     }
     
     private void CreateCodingTrackerDB()
