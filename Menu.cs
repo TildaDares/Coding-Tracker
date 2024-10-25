@@ -25,9 +25,9 @@ public class Menu
                 case MenuOptions.InsertCodingSession:
                     InsertCodingSession();
                     break;
-                // case MenuOptions.GetCodingSession:
-                //     GetCodingLog();
-                //     break;
+                case MenuOptions.GetCodingSession:
+                    GetCodingSession();
+                    break;
                 case MenuOptions.GetCodingSessions:
                     GetCodingSessions();
                     break;
@@ -66,13 +66,47 @@ public class Menu
         ContinueMenu();
     }
 
+    private void GetCodingSession()
+    {
+        Console.Clear();
+        if (!HasCodingSessions())
+        {
+            ContinueMenu();
+            return;
+        }
+    
+        GetCodingSessions();
+        var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to retrieve:");
+        var session = _database.GetCodingSession(id);
+
+        if (session == null)
+        {
+            AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
+            ContinueMenu();
+            return;
+        }
+    
+        Console.Clear();
+        var panel = new Panel("Coding Session Record:")
+        {
+            Border = BoxBorder.Ascii
+        };
+        
+        var table = new Table();
+        BuildTableHeader(table);
+        BuildTableRows(table, session);
+        AnsiConsole.Write(panel);
+        AnsiConsole.Write(table);
+        ContinueMenu();
+    }
+    
     private void GetCodingSessions()
     {
         Console.Clear();
         var sessions = _database.GetAllCodingSessions();
         if (sessions.Count == 0)
         {
-            Console.WriteLine("No coding sessions found!");
+            AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
             ContinueMenu();
             return;
         }
@@ -107,6 +141,14 @@ public class Menu
                 }));
 
         return validator.DateTime.Value;
+    }
+    
+    private bool HasCodingSessions()
+    {
+        var count = _database.CountCodingSessions();
+        if (count >= 1) return true;
+        AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
+        return false;
     }
     
     private void ContinueMenu()
