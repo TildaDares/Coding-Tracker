@@ -4,5 +4,5 @@ public class Validator(bool isValid = false, string? message = "", DateTime? dat
 {
     public bool IsValid { get; init; } = isValid;
     public string Message { get; init; } = message;
-    public DateTime DateTime { get; init; } = DateTime.Now;
+    public DateTime? DateTime { get; init; } = dateTime;
 }
