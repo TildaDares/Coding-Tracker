@@ -35,19 +35,19 @@ public class CodingTrackerDatabase
         }
     }
 
-    public CodingSession GetCodingSession(int codingSessionId)
+    public CodingSession GetCodingSession(CodingSession codingSession)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         CodingSession session = null;
         try
         {
             connection.Open();
-            const string sql = "SELECT * FROM codingTracker WHERE id = @id";
-            session = connection.QuerySingleOrDefault<CodingSession>(sql, new { id = codingSessionId });
+            const string sql = "SELECT * FROM codingTracker WHERE id = @Id";
+            session = connection.QuerySingleOrDefault<CodingSession>(sql, codingSession);
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding session record with ID: {codingSessionId}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding session record with ID: {codingSession.Id}. {e.Message}[/]");
         }
         finally
         {
@@ -77,6 +77,27 @@ public class CodingTrackerDatabase
         }
         
         return sessions;
+    }
+
+    public void UpdateCodingSession(CodingSession codingSession)
+    {
+        using var connection = new SqliteConnection(this.ConnectionString);
+        CodingSession session = null;
+        try
+        {
+            connection.Open();
+            const string sql = "UPDATE codingTracker SET startTime = @StartTime, endTime = @EndTime WHERE id = @Id";
+            var rowsAffected = connection.Execute(sql, codingSession);
+            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
+        }
+        catch (SqliteException e)
+        {
+            AnsiConsole.MarkupLine($"[red]Unable to update coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
     }
     
     public long CountCodingSessions()

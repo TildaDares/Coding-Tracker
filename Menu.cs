@@ -31,9 +31,9 @@ public class Menu
                 case MenuOptions.GetCodingSessions:
                     GetCodingSessions();
                     break;
-                // case "4":
-                //     UpdateHabit();
-                //     break;
+                case MenuOptions.UpdateCodingSession:
+                    UpdateCodingSession();
+                    break;
                 // case "5":
                 //     DeleteHabit();
                 //     break;
@@ -77,7 +77,8 @@ public class Menu
     
         GetCodingSessions();
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to retrieve:");
-        var session = _database.GetCodingSession(id);
+        var codingSession = new CodingSession() { Id = id };
+        var session = _database.GetCodingSession(codingSession);
 
         if (session == null)
         {
@@ -125,6 +126,41 @@ public class Menu
         
         AnsiConsole.Write(panel);
         AnsiConsole.Write(table);
+        ContinueMenu();
+    }
+
+    private void UpdateCodingSession()
+    {
+        Console.Clear();
+        if (!HasCodingSessions())
+        {
+            ContinueMenu();
+            return;
+        }
+    
+        GetCodingSessions();
+        var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to update:");
+        var codingSession = new CodingSession() { Id = id };
+        var session = _database.GetCodingSession(codingSession);
+        
+        if (session == null)
+        {
+            AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
+            ContinueMenu();
+            return;
+        }
+        
+        var startTime = GetDateInput(
+            "[green]Enter the updated start date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
+        Console.Clear();
+        
+        var endTime = GetDateInput(
+            "[green]Enter the updated end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
+        Console.Clear();
+
+        codingSession.StartTime = startTime;
+        codingSession.EndTime = endTime;
+        _database.UpdateCodingSession(codingSession);
         ContinueMenu();
     }
     
