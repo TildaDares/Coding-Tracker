@@ -99,6 +99,27 @@ public class CodingTrackerDatabase
             connection.Close();
         }
     }
+
+    public void DeleteCodingSession(CodingSession codingSession)
+    {
+        using var connection = new SqliteConnection(this.ConnectionString);
+        CodingSession session = null;
+        try
+        {
+            connection.Open();
+            const string sql = "DELETE FROM codingTracker WHERE id = @Id";
+            var rowsAffected = connection.Execute(sql, codingSession);
+            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
+        }
+        catch (SqliteException e)
+        {
+            AnsiConsole.MarkupLine($"[red]Unable to delete coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+    }
     
     public long CountCodingSessions()
     {

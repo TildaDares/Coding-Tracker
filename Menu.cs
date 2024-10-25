@@ -34,15 +34,10 @@ public class Menu
                 case MenuOptions.UpdateCodingSession:
                     UpdateCodingSession();
                     break;
-                // case "5":
-                //     DeleteHabit();
-                //     break;
-                // case "6":
-                //     ViewHabitReportByTypeAndDate();
-                //     break;
-                // case "7":
-                //     ViewHabitsByDate();
-                //     break;
+                case MenuOptions.DeleteCodingSession:
+                    DeleteCodingSession();
+                    break;
+                case MenuOptions.Exit:
                 default:
                     exit = true;
                     break;
@@ -161,6 +156,22 @@ public class Menu
         codingSession.StartTime = startTime;
         codingSession.EndTime = endTime;
         _database.UpdateCodingSession(codingSession);
+        ContinueMenu();
+    }
+
+    private void DeleteCodingSession()
+    {
+        Console.Clear();
+        if (!HasCodingSessions())
+        {
+            ContinueMenu();
+            return;
+        }
+    
+        GetCodingSessions();
+        var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to delete:");
+        var codingSession = new CodingSession() { Id = id };
+        _database.DeleteCodingSession(codingSession);
         ContinueMenu();
     }
     
