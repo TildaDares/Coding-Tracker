@@ -1,9 +1,8 @@
 using System.ComponentModel;
-using System.Runtime.Serialization;
 
 namespace CodingTracker.Enums;
 
-public enum MenuOptions
+public enum MainMenuOptions
 {
     [Description("Insert coding session")]
     InsertCodingSession = 0,
@@ -17,6 +16,8 @@ public enum MenuOptions
     DeleteCodingSession,
     [Description("Start coding session")]
     StartCodingSession,
+    [Description("Goals")]
+    Goals,
     [Description("Exit")]
     Exit
 }

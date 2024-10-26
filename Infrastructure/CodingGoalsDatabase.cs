@@ -1,28 +1,28 @@
-using Microsoft.Data.Sqlite;
 using System.Configuration;
 using CodingTracker.Models;
 using Dapper;
+using Microsoft.Data.Sqlite;
 using Spectre.Console;
 
 namespace CodingTracker;
 
-public class CodingTrackerDatabase
+public class CodingGoalsDatabase
 {
-    private readonly string ConnectionString = ConfigurationManager.ConnectionStrings["CodingTrackerDB"].ConnectionString;
+    private readonly string ConnectionString = ConfigurationManager.ConnectionStrings["CodingGoalDB"].ConnectionString;
     
-    public CodingTrackerDatabase()
+    public CodingGoalsDatabase()
     {
-        CreateCodingTrackerDB();
+        CreateCodingGoalDB();
     }
 
-    public void InsertCodingSession(CodingSession codingSession)
+    public void InsertCodingGoal(CodingGoal codingGoal)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         try
         {
             connection.Open();
-            const string sql = "INSERT INTO codingTracker(startTime, endTime) VALUES (@StartTime, @EndTime)";
-            var rowsAffected = connection.Execute(sql, codingSession);
+            const string sql = "INSERT INTO codingGoal(startTime, endTime, totalHoursGoal) VALUES (@StartTime, @EndTime, @TotalHoursGoal)";
+            var rowsAffected = connection.Execute(sql, codingGoal);
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) inserted.[/]");
         }
         catch (SqliteException e)
@@ -35,64 +35,64 @@ public class CodingTrackerDatabase
         }
     }
 
-    public CodingSession GetCodingSession(CodingSession codingSession)
+    public CodingGoal GetCodingGoal(CodingGoal codingGoal)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
-        CodingSession session = null;
+        CodingGoal goal = null;
         try
         {
             connection.Open();
-            const string sql = "SELECT * FROM codingTracker WHERE id = @Id";
-            session = connection.QuerySingleOrDefault<CodingSession>(sql, codingSession);
+            const string sql = "SELECT * FROM codingGoal WHERE id = @Id";
+            goal = connection.QuerySingleOrDefault<CodingGoal>(sql, codingGoal);
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding goal record with ID: {codingGoal.Id}. {e.Message}[/]");
         }
         finally
         {
             connection.Close();
         }
         
-        return session;
+        return goal;
     }
     
-    public List<CodingSession> GetAllCodingSessions()
+    public List<CodingGoal> GetAllCodingGoals()
     {
         using var connection = new SqliteConnection(this.ConnectionString);
-        var sessions = new List<CodingSession>();
+        var goals = new List<CodingGoal>();
         try
         {
             connection.Open();
-            const string sql = "SELECT * FROM codingTracker";
-            sessions = connection.Query<CodingSession>(sql).ToList();
+            const string sql = "SELECT * FROM codingGoal";
+            goals = connection.Query<CodingGoal>(sql).ToList();
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to retrieve all coding session records. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve all coding goal records. {e.Message}[/]");
         }
         finally
         {
             connection.Close();
         }
         
-        return sessions;
+        return goals;
     }
 
-    public void UpdateCodingSession(CodingSession codingSession)
+    public void UpdateCodingGoal(CodingGoal codingGoal)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
-        CodingSession session = null;
+        CodingGoal goal = null;
         try
         {
             connection.Open();
-            const string sql = "UPDATE codingTracker SET startTime = @StartTime, endTime = @EndTime WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, codingSession);
+            const string sql = "UPDATE codingTracker SET endTime = @EndTime, totalHoursGoal = @TotalHoursGoal WHERE id = @Id";
+            var rowsAffected = connection.Execute(sql, codingGoal);
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to update coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to update coding goal record with ID: {codingGoal.Id}. {e.Message}[/]");
         }
         finally
         {
@@ -100,20 +100,20 @@ public class CodingTrackerDatabase
         }
     }
 
-    public void DeleteCodingSession(CodingSession codingSession)
+    public void DeleteCodingGoal(CodingGoal codingGoal)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
-        CodingSession session = null;
+        CodingGoal goal = null;
         try
         {
             connection.Open();
-            const string sql = "DELETE FROM codingTracker WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, codingSession);
+            const string sql = "DELETE FROM codingGoal WHERE id = @Id";
+            var rowsAffected = connection.Execute(sql, codingGoal);
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to delete coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to delete coding goal record with ID: {codingGoal.Id}. {e.Message}[/]");
         }
         finally
         {
@@ -121,19 +121,19 @@ public class CodingTrackerDatabase
         }
     }
     
-    public long CountCodingSessions()
+    public long CountCodingGoals()
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         var count = 0;
         try
         {
             connection.Open();
-            const string sql = "SELECT COUNT(*) FROM codingTracker";
+            const string sql = "SELECT COUNT(*) FROM codingGoal";
             count = connection.ExecuteScalar<int>(sql);
         } 
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to count coding session records. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to count coding goal records. {e.Message}[/]");
         }
         finally
         {
@@ -143,21 +143,22 @@ public class CodingTrackerDatabase
         return count;
     }
     
-    private void CreateCodingTrackerDB()
+    private void CreateCodingGoalDB()
     {
         using var connection = new SqliteConnection(ConnectionString);
         try
         {
             connection.Open();
-            const string sql = @" CREATE TABLE IF NOT EXISTS codingTracker (
+            const string sql = @" CREATE TABLE IF NOT EXISTS codingGoal (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 startTime TEXT NOT NULL,
-                endTime Text NOT NULL )";
+                endTime Text NOT NULL,
+                totalHoursGoal INTEGER NOT NULL)";
             connection.Execute(sql);
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to create database. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to create coding goal database. {e.Message}[/]");
         }
         finally
         {
