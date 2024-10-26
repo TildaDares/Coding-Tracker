@@ -25,7 +25,7 @@ public static class GoalMenu
             // GetCodingGoal();
             break;
          case GoalMenuOptions.GetCodingGoals:
-            // GetCodingGoals();
+            GetCodingGoals();
             break;
          case GoalMenuOptions.UpdateCodingGoal:
             // UpdateCodingGoal();
@@ -56,5 +56,46 @@ public static class GoalMenu
       var codingGoal = new CodingGoal() { StartTime = startTime, EndTime = endTime, TotalHoursGoal = goalHours };
       _database.InsertCodingGoal(codingGoal);
       Input.ContinueMenu();
+   }
+
+   private static void GetCodingGoals()
+   {
+      Console.Clear();
+      var goals = _database.GetAllCodingGoals();
+      if (goals.Count == 0)
+      {
+         AnsiConsole.MarkupLine("[green]No coding goals found![/]");
+         Input.ContinueMenu();
+         return;
+      }
+        
+      var panel = new Panel("All Coding Goal records:")
+      {
+         Border = BoxBorder.Ascii
+      };
+      var table = new Table();
+      BuildTableHeader(table);
+    
+      foreach (var goal in goals)
+      {
+         BuildTableRows(table, goal);
+      }
+        
+      AnsiConsole.Write(panel);
+      AnsiConsole.Write(table);
+      Input.ContinueMenu();
+   }
+   
+   private static void BuildTableHeader(Table table)
+   {
+      table.AddColumn(new TableColumn("[yellow]Id[/]").Centered());
+      table.AddColumn(new TableColumn("[yellow]StartTime[/]").Centered());
+      table.AddColumn(new TableColumn("[yellow]EndTime[/]").Centered());
+      table.AddColumn(new TableColumn("[yellow]TotalHoursGoal[/]").Centered());
+   }
+    
+   private static void BuildTableRows(Table table, CodingGoal codingGoal)
+   {
+      table.AddRow($"[blue]{codingGoal.Id}[/]", $"[blue]{codingGoal.StartTime}[/]", $"[blue]{codingGoal.EndTime}[/]", $"[blue]{codingGoal.TotalHoursGoal}[/]");
    }
 }

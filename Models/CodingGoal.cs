@@ -6,5 +6,9 @@ public class CodingGoal
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
     public int TotalHoursGoal { get; init; }
-    public double HoursCompleted { get; init; }
+
+    public double HoursCompleted(int totalCodingHoursInRange)
+    {
+        return TotalHoursGoal - totalCodingHoursInRange;
+    }
 }
