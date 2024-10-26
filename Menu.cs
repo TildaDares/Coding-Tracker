@@ -37,6 +37,9 @@ public class Menu
                 case MenuOptions.DeleteCodingSession:
                     DeleteCodingSession();
                     break;
+                case MenuOptions.StartCodingSession:
+                    StartCodingSession();
+                    break;
                 case MenuOptions.Exit:
                 default:
                     exit = true;
@@ -172,6 +175,30 @@ public class Menu
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to delete:");
         var codingSession = new CodingSession() { Id = id };
         _database.DeleteCodingSession(codingSession);
+        ContinueMenu();
+    }
+
+    private void StartCodingSession()
+    {
+        Console.Clear();
+        var stopwatchService = new StopwatchService();
+        AnsiConsole.MarkupLine("[green]Press any key to stop the coding session...[/]");
+        stopwatchService.Start();
+        Console.ReadKey();
+        stopwatchService.Stop();
+        AnsiConsole.MarkupLine($"[green]You ran the coding session for: {stopwatchService.Duration}...[/]");
+        
+        var confirmation = AnsiConsole.Prompt(
+            new ConfirmationPrompt("[yellow]Save coding session to database?[/]"));
+        if (!confirmation)
+        {
+            ContinueMenu();
+            return;
+        };
+        
+        Console.Clear();
+        var codingSession = new CodingSession() { StartTime = stopwatchService.StartTime, EndTime = stopwatchService.EndTime };
+        _database.InsertCodingSession(codingSession);
         ContinueMenu();
     }
     

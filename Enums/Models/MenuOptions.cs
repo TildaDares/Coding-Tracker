@@ -15,6 +15,8 @@ public enum MenuOptions
     UpdateCodingSession,
     [Description("Delete coding session")]
     DeleteCodingSession,
+    [Description("Start coding session")]
+    StartCodingSession,
     [Description("Exit")]
     Exit
 }
