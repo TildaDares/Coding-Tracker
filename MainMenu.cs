@@ -4,7 +4,7 @@ using Spectre.Console;
 
 namespace CodingTracker;
 
-public class Menu
+public class MainMenu
 {
     private readonly CodingTrackerDatabase _database = new();
     public void DisplayMenu()
@@ -15,32 +15,35 @@ public class Menu
             Console.Clear();
             AnsiConsole.MarkupLine("[b][green]Welcome to Coding Tracker![/][/]\n");
             var choice = AnsiConsole.Prompt(
-                new SelectionPrompt<MenuOptions>()
+                new SelectionPrompt<MainMenuOptions>()
                     .Title("Select an option:")
                     .UseConverter(o => $"{o.GetDescription()}")
-                    .AddChoices(Enum.GetValues<MenuOptions>()));
+                    .AddChoices(Enum.GetValues<MainMenuOptions>()));
             
             switch (choice)
             {
-                case MenuOptions.InsertCodingSession:
+                case MainMenuOptions.InsertCodingSession:
                     InsertCodingSession();
                     break;
-                case MenuOptions.GetCodingSession:
+                case MainMenuOptions.GetCodingSession:
                     GetCodingSession();
                     break;
-                case MenuOptions.GetCodingSessions:
+                case MainMenuOptions.GetCodingSessions:
                     GetCodingSessions();
                     break;
-                case MenuOptions.UpdateCodingSession:
+                case MainMenuOptions.UpdateCodingSession:
                     UpdateCodingSession();
                     break;
-                case MenuOptions.DeleteCodingSession:
+                case MainMenuOptions.DeleteCodingSession:
                     DeleteCodingSession();
                     break;
-                case MenuOptions.StartCodingSession:
+                case MainMenuOptions.StartCodingSession:
                     StartCodingSession();
                     break;
-                case MenuOptions.Exit:
+                case MainMenuOptions.Goals:
+                    GoalMenu.Show();
+                    break;
+                case MainMenuOptions.Exit:
                 default:
                     exit = true;
                     break;
@@ -51,17 +54,17 @@ public class Menu
     private void InsertCodingSession()
     {
         Console.Clear();
-        var startTime = GetDateInput(
+        var startTime = Input.GetDateInput(
             "[green]Enter the start date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
         
         Console.Clear();
-        var endTime = GetDateInput(
+        var endTime = Input.GetDateInput(
             "[green]Enter the end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
 
         var codingSession = new CodingSession() { StartTime = startTime, EndTime = endTime };
         _database.InsertCodingSession(codingSession);
-        ContinueMenu();
+        Input.ContinueMenu();
     }
 
     private void GetCodingSession()
@@ -69,7 +72,7 @@ public class Menu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         }
     
@@ -81,7 +84,7 @@ public class Menu
         if (session == null)
         {
             AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         }
     
@@ -96,7 +99,7 @@ public class Menu
         BuildTableRows(table, session);
         AnsiConsole.Write(panel);
         AnsiConsole.Write(table);
-        ContinueMenu();
+        Input.ContinueMenu();
     }
     
     private void GetCodingSessions()
@@ -106,7 +109,7 @@ public class Menu
         if (sessions.Count == 0)
         {
             AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         }
         
@@ -124,7 +127,7 @@ public class Menu
         
         AnsiConsole.Write(panel);
         AnsiConsole.Write(table);
-        ContinueMenu();
+        Input.ContinueMenu();
     }
 
     private void UpdateCodingSession()
@@ -132,7 +135,7 @@ public class Menu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         }
     
@@ -144,22 +147,22 @@ public class Menu
         if (session == null)
         {
             AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         }
         
-        var startTime = GetDateInput(
+        var startTime = Input.GetDateInput(
             "[green]Enter the updated start date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
         Console.Clear();
         
-        var endTime = GetDateInput(
+        var endTime = Input.GetDateInput(
             "[green]Enter the updated end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
 
         codingSession.StartTime = startTime;
         codingSession.EndTime = endTime;
         _database.UpdateCodingSession(codingSession);
-        ContinueMenu();
+        Input.ContinueMenu();
     }
 
     private void DeleteCodingSession()
@@ -167,7 +170,7 @@ public class Menu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         }
     
@@ -175,7 +178,7 @@ public class Menu
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to delete:");
         var codingSession = new CodingSession() { Id = id };
         _database.DeleteCodingSession(codingSession);
-        ContinueMenu();
+        Input.ContinueMenu();
     }
 
     private void StartCodingSession()
@@ -192,29 +195,14 @@ public class Menu
             new ConfirmationPrompt("[yellow]Save coding session to database?[/]"));
         if (!confirmation)
         {
-            ContinueMenu();
+            Input.ContinueMenu();
             return;
         };
         
         Console.Clear();
         var codingSession = new CodingSession() { StartTime = stopwatchService.StartTime, EndTime = stopwatchService.EndTime };
         _database.InsertCodingSession(codingSession);
-        ContinueMenu();
-    }
-    
-    private DateTime GetDateInput(string message, DateTime? minRange = null, DateTime? maxRange = null)
-    {
-        Console.Clear();
-        var validator = new Validator();
-        AnsiConsole.Prompt(
-            new TextPrompt<string>(message)
-                .Validate((dateString) =>
-                {
-                    validator = ValidationService.IsDateValid(dateString, minRange, maxRange);
-                    return validator.IsValid ? ValidationResult.Success() : ValidationResult.Error(validator.Message); 
-                }));
-
-        return validator.DateTime.Value;
+        Input.ContinueMenu();
     }
     
     private bool HasCodingSessions()
@@ -223,12 +211,6 @@ public class Menu
         if (count >= 1) return true;
         AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
         return false;
-    }
-    
-    private void ContinueMenu()
-    {
-        AnsiConsole.MarkupLine("\n[green]Press any key to continue...[/]");
-        Console.ReadLine();
     }
 
     private void BuildTableHeader(Table table)
