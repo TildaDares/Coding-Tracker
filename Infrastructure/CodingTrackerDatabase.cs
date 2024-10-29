@@ -21,7 +21,7 @@ public class CodingTrackerDatabase
         try
         {
             connection.Open();
-            const string sql = "INSERT INTO codingTracker(startTime, endTime) VALUES (@StartTime, @EndTime)";
+            const string sql = "INSERT INTO codingTracker(startTime, endTime, duration) VALUES (@StartTime, @EndTime, @Duration)";
             var rowsAffected = connection.Execute(sql, codingSession);
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) inserted.[/]");
         }
@@ -35,7 +35,7 @@ public class CodingTrackerDatabase
         }
     }
 
-    public CodingSession GetCodingSession(CodingSession codingSession)
+    public CodingSession GetCodingSession(int id)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         CodingSession session = null;
@@ -43,11 +43,11 @@ public class CodingTrackerDatabase
         {
             connection.Open();
             const string sql = "SELECT * FROM codingTracker WHERE id = @Id";
-            session = connection.QuerySingleOrDefault<CodingSession>(sql, codingSession);
+            session = connection.QuerySingleOrDefault<CodingSession>(sql, new {Id = id});
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve coding session record with ID: {id}. {e.Message}[/]");
         }
         finally
         {
@@ -55,6 +55,33 @@ public class CodingTrackerDatabase
         }
         
         return session;
+    }
+
+    public double GetSumOfCodingSessionDuration(DateTime? startTime, DateTime? endTime)
+    {
+        using var connection = new SqliteConnection(this.ConnectionString);
+        var sum = 0.0;
+        try
+        {
+            connection.Open();
+            var sql = "SELECT printf('%.2f', SUM(duration)) FROM codingTracker";
+            if (startTime.HasValue && endTime.HasValue)
+            {
+                sql += " WHERE DATETIME(startTime) >= DATETIME(@StartTime) AND DATETIME(endTime) <= DATETIME(@EndTime)";
+            }
+            
+            sum = connection.ExecuteScalar<double>(sql, new { StartTime = startTime.Value, EndTime = endTime.Value });
+        }
+        catch (SqliteException e)
+        {
+            AnsiConsole.MarkupLine($"[red]Unable to retrieve all coding session records. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+        
+        return sum;
     }
     
     public List<CodingSession> GetAllCodingSessions()
@@ -86,7 +113,7 @@ public class CodingTrackerDatabase
         try
         {
             connection.Open();
-            const string sql = "UPDATE codingTracker SET startTime = @StartTime, endTime = @EndTime WHERE id = @Id";
+            const string sql = "UPDATE codingTracker SET startTime = @StartTime, endTime = @EndTime, duration = @Duration WHERE id = @Id";
             var rowsAffected = connection.Execute(sql, codingSession);
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
         }
@@ -100,7 +127,7 @@ public class CodingTrackerDatabase
         }
     }
 
-    public void DeleteCodingSession(CodingSession codingSession)
+    public void DeleteCodingSession(int id)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         CodingSession session = null;
@@ -108,12 +135,12 @@ public class CodingTrackerDatabase
         {
             connection.Open();
             const string sql = "DELETE FROM codingTracker WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, codingSession);
+            var rowsAffected = connection.Execute(sql, new {@Id = id});
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to delete coding session record with ID: {codingSession.Id}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to delete coding session record with ID: {id}. {e.Message}[/]");
         }
         finally
         {
@@ -152,7 +179,8 @@ public class CodingTrackerDatabase
             const string sql = @" CREATE TABLE IF NOT EXISTS codingTracker (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 startTime TEXT NOT NULL,
-                endTime Text NOT NULL )";
+                endTime Text NOT NULL
+                duration TEXT NOT NULL DEFAULT '0.00')";
             connection.Execute(sql);
         }
         catch (SqliteException e)
