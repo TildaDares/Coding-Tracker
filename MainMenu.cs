@@ -6,7 +6,15 @@ namespace CodingTracker;
 
 public class MainMenu
 {
-    private readonly CodingTrackerDatabase _database = new();
+    private readonly CodingTrackerDatabase _database;
+    private readonly GoalMenu _goalMenu;
+    
+    public MainMenu()
+    {
+        _database = new CodingTrackerDatabase();
+        _goalMenu = new GoalMenu(_database);
+    }
+    
     public void DisplayMenu()
     {
         var exit = false;
@@ -41,7 +49,7 @@ public class MainMenu
                     StartCodingSession();
                     break;
                 case MainMenuOptions.Goals:
-                    GoalMenu.Show();
+                    _goalMenu.Show();
                     break;
                 case MainMenuOptions.Exit:
                 default:
@@ -62,7 +70,7 @@ public class MainMenu
             "[green]Enter the end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
 
-        var codingSession = new CodingSession() { StartTime = startTime, EndTime = endTime };
+        var codingSession = new CodingSession(startTime, endTime);
         _database.InsertCodingSession(codingSession);
         Input.ContinueMenu();
     }
@@ -78,8 +86,7 @@ public class MainMenu
     
         GetCodingSessions();
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to retrieve:");
-        var codingSession = new CodingSession() { Id = id };
-        var session = _database.GetCodingSession(codingSession);
+        var session = _database.GetCodingSession(id);
 
         if (session == null)
         {
@@ -141,10 +148,9 @@ public class MainMenu
     
         GetCodingSessions();
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to update:");
-        var codingSession = new CodingSession() { Id = id };
-        var session = _database.GetCodingSession(codingSession);
+        var codingSession = _database.GetCodingSession(id);
         
-        if (session == null)
+        if (codingSession == null)
         {
             AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
             Input.ContinueMenu();
@@ -158,10 +164,12 @@ public class MainMenu
         var endTime = Input.GetDateInput(
             "[green]Enter the updated end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
-
-        codingSession.StartTime = startTime;
-        codingSession.EndTime = endTime;
-        _database.UpdateCodingSession(codingSession);
+        
+        var updatedSession = new CodingSession(startTime, endTime)
+        {
+            Id = id
+        };
+        _database.UpdateCodingSession(updatedSession);
         Input.ContinueMenu();
     }
 
@@ -176,8 +184,7 @@ public class MainMenu
     
         GetCodingSessions();
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to delete:");
-        var codingSession = new CodingSession() { Id = id };
-        _database.DeleteCodingSession(codingSession);
+        _database.DeleteCodingSession(id);
         Input.ContinueMenu();
     }
 
@@ -200,7 +207,7 @@ public class MainMenu
         };
         
         Console.Clear();
-        var codingSession = new CodingSession() { StartTime = stopwatchService.StartTime, EndTime = stopwatchService.EndTime };
+        var codingSession = new CodingSession(stopwatchService.StartTime, stopwatchService.EndTime);
         _database.InsertCodingSession(codingSession);
         Input.ContinueMenu();
     }
@@ -218,7 +225,7 @@ public class MainMenu
         table.AddColumn(new TableColumn("[yellow]Id[/]").Centered());
         table.AddColumn(new TableColumn("[yellow]StartTime[/]").Centered());
         table.AddColumn(new TableColumn("[yellow]EndTime[/]").Centered());
-        table.AddColumn(new TableColumn("[yellow]Duration (Days:Hrs:Mins:Secs)[/]").Centered());
+        table.AddColumn(new TableColumn("[yellow]Duration (hrs)[/]").Centered());
     }
     
     private void BuildTableRows(Table table, CodingSession codingSession)

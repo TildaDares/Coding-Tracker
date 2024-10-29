@@ -21,4 +21,9 @@ public static class ValidationService
         
         return new Validator(isValid && isWithinRange, message, dateTime: dateValue);
     }
+    
+    public static bool DeadlinePassed(DateTime endTime)
+    {
+        return DateTime.Now >= endTime;
+    }
 }
