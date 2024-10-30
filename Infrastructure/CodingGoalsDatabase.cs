@@ -153,7 +153,7 @@ public class CodingGoalsDatabase
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 startTime TEXT NOT NULL,
                 endTime Text NOT NULL,
-                totalHoursGoal INTEGER NOT NULL)";
+                totalHoursGoal TEXT NOT NULL DEFAULT '0.00')";
             connection.Execute(sql);
         }
         catch (SqliteException e)

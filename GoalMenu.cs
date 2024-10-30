@@ -56,7 +56,7 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
       var endTime = Input.GetDateInput(
          "[green]Enter the end date & time of your coding goal in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
       
-      var goalHours = AnsiConsole.Ask<int>("[green]Enter the number of hours of your coding goal:[/]");
+      var goalHours = AnsiConsole.Ask<double>("[green]Enter the number of hours of your coding goal:[/]");
       
       var confirmation = Input.ConfirmPrompt("[yellow]Save coding goal to database?[/]");
       if (!confirmation) return;
@@ -157,7 +157,7 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
       var endTime = Input.GetDateInput(
          "[green]Enter the updated end date & time of your coding goal in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: goal.StartTime);
       
-      var goalHours = AnsiConsole.Ask<int>("[green]Enter the updated number of hours of your coding goal:[/]");
+      var goalHours = AnsiConsole.Ask<double>("[green]Enter the updated number of hours of your coding goal:[/]");
 
       var confirmation = Input.ConfirmPrompt("[yellow]Save updated coding goal to database?[/]");
       if (!confirmation) return;
@@ -210,6 +210,9 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
 
    private static void DisplayCodingGoalDetails(CodingGoal goal, double totalHours)
    {
+      var completedHoursPercentage = Math.Round((totalHours / goal.TotalHoursGoal) * 100, 2);
+      var remainingHoursPercentage = Math.Round(100 - completedHoursPercentage, 2);
+      
       if (ValidationService.DeadlinePassed(goal.EndTime))
       {
          AnsiConsole.MarkupLine("[red]Goal Deadline Passed![/]");
@@ -222,17 +225,23 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
       {
          if (totalHours >= goal.TotalHoursGoal)
          {
-            AnsiConsole.MarkupLine($"[blue]You completed {totalHours} / {goal.TotalHoursGoal}. Congratulations on reaching your coding goal!![/]");
+            AnsiConsole.MarkupLine($"[blue]You completed {totalHours} / {goal.TotalHoursGoal} hours. Congratulations on reaching your coding goal!![/]");
          }
          else
          {
             var remainingHours = goal.TotalHoursGoal - totalHours;
             var daysRemaining = goal.EndTime.Subtract(DateTime.Now).TotalDays;
             var hoursToCompletePerDay = remainingHours / daysRemaining;
-            AnsiConsole.MarkupLine($"[blue]You have completed [bold][yellow]{totalHours / goal.TotalHoursGoal:P2}[/][/] of your coding goal.[/]");
+            
             AnsiConsole.MarkupLine($"[blue]You have coded for [bold][yellow]{totalHours}[/][/]/[bold][yellow]{goal.TotalHoursGoal}[/][/] hours required in this coding goal.[/]");
             AnsiConsole.MarkupLine($"[blue]To reach your coding goal, you would have to code for [bold][yellow]{hoursToCompletePerDay:F}[/][/] hours each day until [bold][yellow]{goal.EndTime}[/][/][/]");
          }
       }
+
+      AnsiConsole.Write(new BreakdownChart()
+         .Width(60)
+         .ShowPercentage()
+         .AddItem("Completed Hours", completedHoursPercentage, Color.Green)
+         .AddItem("Remaining Hours", remainingHoursPercentage, Color.Red));
    }
 }
