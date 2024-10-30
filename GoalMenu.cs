@@ -57,6 +57,9 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
          "[green]Enter the end date & time of your coding goal in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
       
       var goalHours = AnsiConsole.Ask<int>("[green]Enter the number of hours of your coding goal:[/]");
+      
+      var confirmation = Input.ConfirmPrompt("[yellow]Save coding goal to database?[/]");
+      if (!confirmation) return;
 
       var codingGoal = new CodingGoal() { StartTime = startTime, EndTime = endTime, TotalHoursGoal = goalHours };
       _goalsDatabase.InsertCodingGoal(codingGoal);
@@ -156,6 +159,9 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
       
       var goalHours = AnsiConsole.Ask<int>("[green]Enter the updated number of hours of your coding goal:[/]");
 
+      var confirmation = Input.ConfirmPrompt("[yellow]Save updated coding goal to database?[/]");
+      if (!confirmation) return;
+      
       var updatedCodingGoal = new CodingGoal() { Id = goal.Id, EndTime = endTime, TotalHoursGoal = goalHours };
       _goalsDatabase.UpdateCodingGoal(updatedCodingGoal);
       
@@ -173,6 +179,9 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
     
       GetCodingGoals();
       var id = AnsiConsole.Ask<int>("Enter the coding goal ID you wish to delete:");
+      var confirmation = Input.ConfirmPrompt("[yellow]This action is irreversible. Confirm delete?[/]");
+      if (!confirmation) return;
+      
       _goalsDatabase.DeleteCodingGoal(id);
       Input.ContinueMenu();
    }

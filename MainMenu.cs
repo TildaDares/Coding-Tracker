@@ -70,6 +70,9 @@ public class MainMenu
             "[green]Enter the end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
 
+        var confirmation = Input.ConfirmPrompt("[yellow]Save coding session to database?[/]");
+        if (!confirmation) return;
+        
         var codingSession = new CodingSession(startTime, endTime);
         _database.InsertCodingSession(codingSession);
         Input.ContinueMenu();
@@ -165,6 +168,9 @@ public class MainMenu
             "[green]Enter the updated end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
         
+        var confirmation = Input.ConfirmPrompt("[yellow]Save updated coding session to database?[/]");
+        if (!confirmation) return;
+        
         var updatedSession = new CodingSession(startTime, endTime)
         {
             Id = id
@@ -184,6 +190,9 @@ public class MainMenu
     
         GetCodingSessions();
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to delete:");
+        var confirmation = Input.ConfirmPrompt("[yellow]This action is irreversible. Confirm delete?[/]");
+        if (!confirmation) return;
+        
         _database.DeleteCodingSession(id);
         Input.ContinueMenu();
     }
@@ -198,8 +207,7 @@ public class MainMenu
         stopwatchService.Stop();
         AnsiConsole.MarkupLine($"[green]You ran the coding session for: {stopwatchService.Duration}...[/]");
         
-        var confirmation = AnsiConsole.Prompt(
-            new ConfirmationPrompt("[yellow]Save coding session to database?[/]"));
+        var confirmation = Input.ConfirmPrompt("[yellow]Save coding session to database?[/]");
         if (!confirmation)
         {
             Input.ContinueMenu();
