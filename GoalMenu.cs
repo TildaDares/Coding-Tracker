@@ -4,43 +4,48 @@ using Spectre.Console;
 
 namespace CodingTracker;
 
-public static class GoalMenu
+public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
 {
-   private static readonly CodingGoalsDatabase _database = new();
-   public static void Show()
+   private readonly CodingGoalsDatabase _goalsDatabase = new();
+
+   public void Show()
    {
-      Console.Clear();
-      var choice = AnsiConsole.Prompt(
-         new SelectionPrompt<GoalMenuOptions>()
-            .Title("Select an option:")
-            .UseConverter(g => $"{g.GetDescription()}")
-            .AddChoices(Enum.GetValues<GoalMenuOptions>()));
-            
-      switch (choice)
+      var exit = false;
+      while (!exit)
       {
-         case GoalMenuOptions.InsertCodingGoal:
-            InsertCodingGoal();
-            break;
-         case GoalMenuOptions.GetCodingGoal:
-            // GetCodingGoal();
-            break;
-         case GoalMenuOptions.GetCodingGoals:
-            GetCodingGoals();
-            break;
-         case GoalMenuOptions.UpdateCodingGoal:
-            // UpdateCodingGoal();
-            break;
-         case GoalMenuOptions.DeleteCodingGoal:
-            // DeleteCodingGoal();
-            break;
-         case GoalMenuOptions.Exit:
-            break;
-         default:
-            break;
+         Console.Clear();
+         var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<GoalMenuOptions>()
+               .Title("Select an option:")
+               .UseConverter(g => $"{g.GetDescription()}")
+               .AddChoices(Enum.GetValues<GoalMenuOptions>()));
+
+         switch (choice)
+         {
+            case GoalMenuOptions.InsertCodingGoal:
+               InsertCodingGoal();
+               break;
+            case GoalMenuOptions.GetCodingGoal:
+               GetCodingGoal();
+               break;
+            case GoalMenuOptions.GetCodingGoals:
+               GetCodingGoals();
+               break;
+            case GoalMenuOptions.UpdateCodingGoal:
+               UpdateCodingGoal();
+               break;
+            case GoalMenuOptions.DeleteCodingGoal:
+               DeleteCodingGoal();
+               break;
+            case GoalMenuOptions.Exit:
+            default:
+               exit = true;
+               break;
+         }
       }
    }
 
-   private static void InsertCodingGoal()
+   private void InsertCodingGoal()
    {
       Console.Clear();
       AnsiConsole.MarkupLine("[bold yellow]Your coding goal startTime starts counting when you successfully set a goal[/]");
@@ -54,21 +59,58 @@ public static class GoalMenu
       var goalHours = AnsiConsole.Ask<int>("[green]Enter the number of hours of your coding goal:[/]");
 
       var codingGoal = new CodingGoal() { StartTime = startTime, EndTime = endTime, TotalHoursGoal = goalHours };
-      _database.InsertCodingGoal(codingGoal);
+      _goalsDatabase.InsertCodingGoal(codingGoal);
       Input.ContinueMenu();
    }
 
-   private static void GetCodingGoals()
+   private void GetCodingGoal()
    {
       Console.Clear();
-      var goals = _database.GetAllCodingGoals();
+      if (!HasCodingGoals())
+      {
+         Input.ContinueMenu();
+         return;
+      }
+    
+      GetCodingGoals();
+      var id = AnsiConsole.Ask<int>("Enter the coding goal ID you wish to retrieve:");
+      var goal = new CodingGoal() { Id = id };
+      goal = _goalsDatabase.GetCodingGoal(goal);
+
+      if (goal == null)
+      {
+         AnsiConsole.MarkupLine("[red]No coding goal found with that ID![/]");
+         Input.ContinueMenu();
+         return;
+      }
+    
+      Console.Clear();
+      var panel = new Panel("Coding Goal Record:")
+      {
+         Border = BoxBorder.Ascii
+      };
+      
+      var totalHours = _trackerDatabase.GetSumOfCodingSessionDuration(goal.StartTime, goal.EndTime);
+      var table = new Table();
+      BuildTableHeader(table);
+      BuildTableRows(table, goal);
+      
+      AnsiConsole.Render(table);
+      DisplayCodingGoalDetails(goal, totalHours);
+      Input.ContinueMenu();
+   }
+   
+   private void GetCodingGoals()
+   {
+      Console.Clear();
+      var goals = _goalsDatabase.GetAllCodingGoals();
       if (goals.Count == 0)
       {
          AnsiConsole.MarkupLine("[green]No coding goals found![/]");
          Input.ContinueMenu();
          return;
       }
-        
+      
       var panel = new Panel("All Coding Goal records:")
       {
          Border = BoxBorder.Ascii
@@ -83,7 +125,64 @@ public static class GoalMenu
         
       AnsiConsole.Write(panel);
       AnsiConsole.Write(table);
+      AnsiConsole.MarkupLine("[bold yellow]* All rows colored [red]red[/] are [red]COMPLETED/PAST[/] goals:[/]");
       Input.ContinueMenu();
+   }
+   
+   private void UpdateCodingGoal()
+   {
+      Console.Clear();
+      if (!HasCodingGoals())
+      {
+         Input.ContinueMenu();
+         return;
+      }
+      
+      GetCodingGoals();
+      var id = AnsiConsole.Ask<int>("Enter the coding goal ID you wish to update:");
+      var goal = new CodingGoal() { Id = id };
+      goal = _goalsDatabase.GetCodingGoal(goal);
+
+      if (goal == null)
+      {
+         AnsiConsole.MarkupLine("[red]No coding goal found with that ID![/]");
+         Input.ContinueMenu();
+         return;
+      }
+        
+      AnsiConsole.MarkupLine("[bold yellow]Start time & date cannot be updated![/]");
+      var endTime = Input.GetDateInput(
+         "[green]Enter the updated end date & time of your coding goal in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: goal.StartTime);
+      
+      var goalHours = AnsiConsole.Ask<int>("[green]Enter the updated number of hours of your coding goal:[/]");
+
+      var updatedCodingGoal = new CodingGoal() { Id = goal.Id, EndTime = endTime, TotalHoursGoal = goalHours };
+      _goalsDatabase.UpdateCodingGoal(updatedCodingGoal);
+      
+      Input.ContinueMenu();
+   }
+   
+   private void DeleteCodingGoal()
+   {
+      Console.Clear();
+      if (!HasCodingGoals())
+      {
+         Input.ContinueMenu();
+         return;
+      }
+    
+      GetCodingGoals();
+      var id = AnsiConsole.Ask<int>("Enter the coding goal ID you wish to delete:");
+      _goalsDatabase.DeleteCodingGoal(id);
+      Input.ContinueMenu();
+   }
+   
+   private bool HasCodingGoals()
+   {
+      var count = _goalsDatabase.CountCodingGoals();
+      if (count >= 1) return true;
+      AnsiConsole.MarkupLine("[green]No coding goals found![/]");
+      return false;
    }
    
    private static void BuildTableHeader(Table table)
@@ -96,6 +195,35 @@ public static class GoalMenu
     
    private static void BuildTableRows(Table table, CodingGoal codingGoal)
    {
-      table.AddRow($"[blue]{codingGoal.Id}[/]", $"[blue]{codingGoal.StartTime}[/]", $"[blue]{codingGoal.EndTime}[/]", $"[blue]{codingGoal.TotalHoursGoal}[/]");
+      var color = ValidationService.DeadlinePassed(codingGoal.EndTime) ? "[red]" : "[blue]";
+      table.AddRow($"{color}{codingGoal.Id}[/]", $"{color}{codingGoal.StartTime}[/]", $"{color}{codingGoal.EndTime}[/]", $"{color}{codingGoal.TotalHoursGoal}[/]");
+   }
+
+   private static void DisplayCodingGoalDetails(CodingGoal goal, double totalHours)
+   {
+      if (ValidationService.DeadlinePassed(goal.EndTime))
+      {
+         AnsiConsole.MarkupLine("[red]Goal Deadline Passed![/]");
+         var message = $"[blue]You completed {totalHours} / {goal.TotalHoursGoal} hours.";
+         AnsiConsole.MarkupLine(totalHours >= goal.TotalHoursGoal
+            ? $"{message} You reached your coding goal!![/]"
+            : $"{message} Coding goal was not completed![/]");
+      }
+      else
+      {
+         if (totalHours >= goal.TotalHoursGoal)
+         {
+            AnsiConsole.MarkupLine($"[blue]You completed {totalHours} / {goal.TotalHoursGoal}. Congratulations on reaching your coding goal!![/]");
+         }
+         else
+         {
+            var remainingHours = goal.TotalHoursGoal - totalHours;
+            var daysRemaining = goal.EndTime.Subtract(DateTime.Now).TotalDays;
+            var hoursToCompletePerDay = remainingHours / daysRemaining;
+            AnsiConsole.MarkupLine($"[blue]You have completed [bold][yellow]{totalHours / goal.TotalHoursGoal:P2}[/][/] of your coding goal.[/]");
+            AnsiConsole.MarkupLine($"[blue]You have coded for [bold][yellow]{totalHours}[/][/]/[bold][yellow]{goal.TotalHoursGoal}[/][/] hours required in this coding goal.[/]");
+            AnsiConsole.MarkupLine($"[blue]To reach your coding goal, you would have to code for [bold][yellow]{hoursToCompletePerDay:F}[/][/] hours each day until [bold][yellow]{goal.EndTime}[/][/][/]");
+         }
+      }
    }
 }
