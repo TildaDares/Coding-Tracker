@@ -1,7 +1,8 @@
 using System.Configuration;
 using System.Globalization;
+using CodingTracker.Models;
 
-namespace CodingTracker;
+namespace CodingTracker.Services;
 
 public static class ValidationService
 {

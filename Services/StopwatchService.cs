@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Spectre.Console;
 
-namespace CodingTracker;
+namespace CodingTracker.Services;
 
 public class StopwatchService
 {

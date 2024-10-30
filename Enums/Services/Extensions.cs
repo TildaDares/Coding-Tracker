@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace CodingTracker.Enums;
+namespace CodingTracker.Enums.Services;
 
 public static class Extensions
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace CodingTracker.Enums;
+namespace CodingTracker.Enums.Models;
 
 public enum MainMenuOptions
 {

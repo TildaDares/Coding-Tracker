@@ -1,8 +1,11 @@
-using CodingTracker.Enums;
+using CodingTracker.Enums.Models;
+using CodingTracker.Enums.Services;
+using CodingTracker.Infrastructure;
 using CodingTracker.Models;
+using CodingTracker.Services;
 using Spectre.Console;
 
-namespace CodingTracker;
+namespace CodingTracker.User_Interfaces;
 
 public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
 {

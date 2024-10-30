@@ -1,4 +1,4 @@
-namespace CodingTracker;
+namespace CodingTracker.Models;
 
 public class Validator(bool isValid = false, string? message = "", DateTime? dateTime = null)
 {
