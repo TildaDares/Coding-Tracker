@@ -1,10 +1,10 @@
-using Microsoft.Data.Sqlite;
 using System.Configuration;
 using CodingTracker.Models;
 using Dapper;
+using Microsoft.Data.Sqlite;
 using Spectre.Console;
 
-namespace CodingTracker;
+namespace CodingTracker.Infrastructure;
 
 public class CodingTrackerDatabase
 {
@@ -84,15 +84,20 @@ public class CodingTrackerDatabase
         return sum;
     }
     
-    public List<CodingSession> GetAllCodingSessions()
+    public List<CodingSession> GetAllCodingSessions(CodingSessionFilter? filter = null)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         var sessions = new List<CodingSession>();
         try
         {
             connection.Open();
-            const string sql = "SELECT * FROM codingTracker";
-            sessions = connection.Query<CodingSession>(sql).ToList();
+            var sql = "SELECT * FROM codingTracker";
+            if (filter.StartTime.HasValue && filter.EndTime.HasValue)
+            {
+                sql += " WHERE DATETIME(startTime) >= DATETIME(@StartTime) AND DATETIME(endTime) <= DATETIME(@EndTime)";
+            }
+            
+            sessions = connection.Query<CodingSession>(sql, filter).ToList();
         }
         catch (SqliteException e)
         {

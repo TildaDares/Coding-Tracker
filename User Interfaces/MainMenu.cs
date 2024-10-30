@@ -52,10 +52,14 @@ public class MainMenu
                 case MainMenuOptions.StartCodingSession:
                     StartCodingSession();
                     break;
+                case MainMenuOptions.FilterCodingSessionsByPeriod:
+                    FilterCodingSessionsByPeriod();
+                    break;
                 case MainMenuOptions.Goals:
                     _goalMenu.Show();
                     break;
                 case MainMenuOptions.Exit:
+                case MainMenuOptions.ViewCodingSessionReportByPeriod:
                 default:
                     exit = true;
                     break;
@@ -126,21 +130,8 @@ public class MainMenu
             Input.ContinueMenu();
             return;
         }
-        
-        var panel = new Panel("All Coding Sessions records:")
-        {
-            Border = BoxBorder.Ascii
-        };
-        var table = new Table();
-        BuildTableHeader(table);
-    
-        foreach (var session in sessions)
-        {
-            BuildTableRows(table, session);
-        }
-        
-        AnsiConsole.Write(panel);
-        AnsiConsole.Write(table);
+
+        DisplayCodingSessions(sessions, "All coding sessions:");
         Input.ContinueMenu();
     }
 
@@ -223,6 +214,37 @@ public class MainMenu
         _database.InsertCodingSession(codingSession);
         Input.ContinueMenu();
     }
+
+    private void FilterCodingSessionsByPeriod()
+    {
+        Console.Clear();
+        if (!HasCodingSessions())
+        {
+            Input.ContinueMenu();
+            return;
+        }
+        
+        var startTime = Input.GetDateInput(
+            "[green]Enter the start date & time of sessions you want to filter in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
+        Console.Clear();
+        
+        var endTime = Input.GetDateInput(
+            "[green]Enter the end date & time of sessions you want to filter in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
+        Console.Clear();
+
+        var filter = new CodingSessionFilter(startTime, endTime);
+        var sessions = _database.GetAllCodingSessions(filter);
+        
+        if (sessions.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
+            Input.ContinueMenu();
+            return;
+        }
+        
+        DisplayCodingSessions(sessions,$"All coding sessions in the period {startTime} to {endTime}:");
+        Input.ContinueMenu();
+    }
     
     private bool HasCodingSessions()
     {
@@ -243,5 +265,24 @@ public class MainMenu
     private void BuildTableRows(Table table, CodingSession codingSession)
     {
         table.AddRow($"[blue]{codingSession.Id}[/]", $"[blue]{codingSession.StartTime}[/]", $"[blue]{codingSession.EndTime}[/]", $"[blue]{codingSession.Duration}[/]");
+    }
+
+    private void DisplayCodingSessions(List<CodingSession> sessions, string title)
+    {
+        var panel = new Panel(title)
+        {
+            Border = BoxBorder.Ascii
+        };
+        
+        var table = new Table();
+        BuildTableHeader(table);
+    
+        foreach (var session in sessions)
+        {
+            BuildTableRows(table, session);
+        }
+        
+        AnsiConsole.Write(panel);
+        AnsiConsole.Write(table);
     }
 }

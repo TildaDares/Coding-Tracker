@@ -16,6 +16,10 @@ public enum MainMenuOptions
     DeleteCodingSession,
     [Description("Start coding session")]
     StartCodingSession,
+    [Description("Filter coding sessions by period")]
+    FilterCodingSessionsByPeriod,
+    [Description("View coding session report by period")]
+    ViewCodingSessionReportByPeriod,
     [Description("Goals")]
     Goals,
     [Description("Exit")]
