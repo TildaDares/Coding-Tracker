@@ -86,7 +86,7 @@ public class CodingGoalsDatabase
         try
         {
             connection.Open();
-            const string sql = "UPDATE codingTracker SET endTime = @EndTime, totalHoursGoal = @TotalHoursGoal WHERE id = @Id";
+            const string sql = "UPDATE codingGoal SET endTime = @EndTime, totalHoursGoal = @TotalHoursGoal WHERE id = @Id";
             var rowsAffected = connection.Execute(sql, codingGoal);
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
         }
@@ -100,7 +100,7 @@ public class CodingGoalsDatabase
         }
     }
 
-    public void DeleteCodingGoal(CodingGoal codingGoal)
+    public void DeleteCodingGoal(int id)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
         CodingGoal goal = null;
@@ -108,12 +108,12 @@ public class CodingGoalsDatabase
         {
             connection.Open();
             const string sql = "DELETE FROM codingGoal WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, codingGoal);
+            var rowsAffected = connection.Execute(sql, new {Id = id});
             AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
         }
         catch (SqliteException e)
         {
-            AnsiConsole.MarkupLine($"[red]Unable to delete coding goal record with ID: {codingGoal.Id}. {e.Message}[/]");
+            AnsiConsole.MarkupLine($"[red]Unable to delete coding goal record with ID: {id}. {e.Message}[/]");
         }
         finally
         {
