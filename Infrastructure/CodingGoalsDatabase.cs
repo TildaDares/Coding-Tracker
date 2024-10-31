@@ -155,10 +155,48 @@ public class CodingGoalsDatabase
                 endTime Text NOT NULL,
                 totalHoursGoal TEXT NOT NULL DEFAULT '0.00')";
             connection.Execute(sql);
+            
+            // Check if table is already populated
+            const string selectSql = "SELECT COUNT(*) FROM codingGoal";
+            var count = connection.ExecuteScalar<int>(selectSql);
+            
+            if (count == 0)
+            {
+                SeedCodingGoalDB();
+            }
         }
         catch (SqliteException e)
         {
             AnsiConsole.MarkupLine($"[red]Unable to create coding goal database. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+    }
+    
+    private void SeedCodingGoalDB()
+    {
+        using var connection = new SqliteConnection(ConnectionString);
+        try
+        {
+            connection.Open();
+            var rand = new Random();
+
+            for (var i = 0; i < 5; i++)
+            {
+                var startTime = Utilities.GetRandomDateTime(rand);
+                var endTime = Utilities.GetRandomDateTime(rand, startTime);
+                var totalHoursGoal = rand.NextDouble() * 100;
+                const string sql = "INSERT INTO codingGoal(startTime, endTime, totalHoursGoal) VALUES (@StartTime, @EndTime, @TotalHoursGoal)";
+                
+                var codingGoal = new CodingGoal { StartTime = startTime, EndTime = endTime, TotalHoursGoal = totalHoursGoal };
+                connection.Execute(sql, codingGoal);
+            }
+        }
+        catch (SqliteException e)
+        {
+            Console.WriteLine($"Unable to seed coding goal database. {e.Message}");
         }
         finally
         {

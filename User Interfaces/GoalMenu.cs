@@ -220,7 +220,7 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
       if (ValidationService.DeadlinePassed(goal.EndTime))
       {
          AnsiConsole.MarkupLine("[red]Goal Deadline Passed![/]");
-         var message = $"[blue]You completed {totalHours} / {goal.TotalHoursGoal} hours.";
+         var message = $"[blue]You completed {totalHours:F} / {goal.TotalHoursGoal:F} hours.";
          AnsiConsole.MarkupLine(totalHours >= goal.TotalHoursGoal
             ? $"{message} You reached your coding goal!![/]"
             : $"{message} Coding goal was not completed![/]");
@@ -229,7 +229,7 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
       {
          if (totalHours >= goal.TotalHoursGoal)
          {
-            AnsiConsole.MarkupLine($"[blue]You completed {totalHours} / {goal.TotalHoursGoal} hours. Congratulations on reaching your coding goal!![/]");
+            AnsiConsole.MarkupLine($"[blue]You completed {totalHours:F} / {goal.TotalHoursGoal:F} hours. Congratulations on reaching your coding goal!![/]");
          }
          else
          {
@@ -237,7 +237,7 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
             var daysRemaining = goal.EndTime.Subtract(DateTime.Now).TotalDays;
             var hoursToCompletePerDay = remainingHours / daysRemaining;
             
-            AnsiConsole.MarkupLine($"[blue]You have coded for [bold][yellow]{totalHours}[/][/]/[bold][yellow]{goal.TotalHoursGoal}[/][/] hours required in this coding goal.[/]");
+            AnsiConsole.MarkupLine($"[blue]You have coded for [bold][yellow]{totalHours:F}[/][/]/[bold][yellow]{goal.TotalHoursGoal:F}[/][/] hours required in this coding goal.[/]");
             AnsiConsole.MarkupLine($"[blue]To reach your coding goal, you would have to code for [bold][yellow]{hoursToCompletePerDay:F}[/][/] hours each day until [bold][yellow]{goal.EndTime}[/][/][/]");
          }
       }

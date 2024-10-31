@@ -184,13 +184,51 @@ public class CodingTrackerDatabase
             const string sql = @" CREATE TABLE IF NOT EXISTS codingTracker (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 startTime TEXT NOT NULL,
-                endTime Text NOT NULL
+                endTime Text NOT NULL,
                 duration TEXT NOT NULL DEFAULT '0.00')";
             connection.Execute(sql);
+            
+            // Check if table is already populated
+            const string selectSql = "SELECT COUNT(*) FROM codingTracker";
+            var count = connection.ExecuteScalar<int>(selectSql);
+            
+            if (count == 0)
+            {
+                SeedCodingTrackerDB();
+            }
         }
         catch (SqliteException e)
         {
             AnsiConsole.MarkupLine($"[red]Unable to create coding tracker database. {e.Message}[/]");
+        }
+        finally
+        {
+            connection.Close();
+        }
+    }
+    
+    private void SeedCodingTrackerDB()
+    {
+        using var connection = new SqliteConnection(ConnectionString);
+        try
+        {
+            connection.Open();
+            var rand = new Random();
+
+            for (var i = 0; i < 15; i++)
+            {
+                var startTime = Utilities.GetRandomDateTime(rand);
+                var endTime = Utilities.GetRandomDateTime(rand, startTime);
+                var sql =
+                    "INSERT INTO codingTracker(startTime, endTime, duration) VALUES (@StartTime, @EndTime, @Duration)";
+                
+               var codingSession = new CodingSession(startTime, endTime);
+               connection.Execute(sql, codingSession);
+            }
+        }
+        catch (SqliteException e)
+        {
+            Console.WriteLine($"Unable to seed coding tracker database. {e.Message}");
         }
         finally
         {

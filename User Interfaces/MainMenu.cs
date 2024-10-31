@@ -24,7 +24,7 @@ public class MainMenu
         var exit = false;
         while (!exit)
         {
-            Console.Clear();
+            // Console.Clear();
             AnsiConsole.MarkupLine("[b][green]Welcome to Coding Tracker![/][/]\n");
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<MainMenuOptions>()
