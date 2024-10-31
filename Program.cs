@@ -1,4 +1,4 @@
-﻿using CodingTracker.User_Interfaces;
+﻿using CodingTracker.UserInterface;
 
 var menu = new MainMenu();
 menu.DisplayMenu();

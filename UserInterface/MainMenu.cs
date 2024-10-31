@@ -5,7 +5,7 @@ using CodingTracker.Models;
 using CodingTracker.Services;
 using Spectre.Console;
 
-namespace CodingTracker.User_Interfaces;
+namespace CodingTracker.UserInterface;
 
 public class MainMenu
 {
