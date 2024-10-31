@@ -57,20 +57,20 @@ public class CodingTrackerDatabase
         return session;
     }
 
-    public double GetSumOfCodingSessionDuration(DateTime? startTime, DateTime? endTime)
+    public CodingStats GetSumOfCodingSessionDuration(CodingSessionFilter filter)
     {
         using var connection = new SqliteConnection(this.ConnectionString);
-        var sum = 0.0;
+        CodingStats stats = null;
         try
         {
             connection.Open();
-            var sql = "SELECT printf('%.2f', SUM(duration)) FROM codingTracker";
-            if (startTime.HasValue && endTime.HasValue)
+            var sql = "SELECT printf('%.2f', SUM(duration)) AS TotalHours, COUNT(*) As RecordCount FROM codingTracker";
+            if (filter is { StartTime: not null, EndTime: not null })
             {
                 sql += " WHERE DATETIME(startTime) >= DATETIME(@StartTime) AND DATETIME(endTime) <= DATETIME(@EndTime)";
             }
             
-            sum = connection.ExecuteScalar<double>(sql, new { StartTime = startTime.Value, EndTime = endTime.Value });
+            stats = connection.QuerySingle<CodingStats>(sql, new { StartTime = filter.StartTime.Value, EndTime = filter.EndTime.Value });
         }
         catch (SqliteException e)
         {
@@ -81,7 +81,7 @@ public class CodingTrackerDatabase
             connection.Close();
         }
         
-        return sum;
+        return stats;
     }
     
     public List<CodingSession> GetAllCodingSessions(CodingSessionFilter? filter = null)
@@ -92,7 +92,7 @@ public class CodingTrackerDatabase
         {
             connection.Open();
             var sql = "SELECT * FROM codingTracker";
-            if (filter.StartTime.HasValue && filter.EndTime.HasValue)
+            if (filter is { StartTime: not null, EndTime: not null })
             {
                 sql += " WHERE DATETIME(startTime) >= DATETIME(@StartTime) AND DATETIME(endTime) <= DATETIME(@EndTime)";
             }

@@ -96,13 +96,14 @@ public class GoalMenu(CodingTrackerDatabase _trackerDatabase)
          Border = BoxBorder.Ascii
       };
       
-      var totalHours = _trackerDatabase.GetSumOfCodingSessionDuration(goal.StartTime, goal.EndTime);
+      var filter = new CodingSessionFilter { StartTime = goal.StartTime, EndTime = goal.EndTime };
+      var stats = _trackerDatabase.GetSumOfCodingSessionDuration(filter);
       var table = new Table();
       BuildTableHeader(table);
       BuildTableRows(table, goal);
       
       AnsiConsole.Render(table);
-      DisplayCodingGoalDetails(goal, totalHours);
+      DisplayCodingGoalDetails(goal, stats.TotalHours);
       Input.ContinueMenu();
    }
    

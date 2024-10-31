@@ -1,7 +1,7 @@
 namespace CodingTracker.Models;
 
-public class CodingSessionFilter(DateTime? startTime, DateTime? endTime)
+public class CodingSessionFilter
 {
-    public DateTime? StartTime { get; init; } = startTime;
-    public DateTime? EndTime { get; init; } = endTime;
+    public DateTime? StartTime { get; init; }
+    public DateTime? EndTime { get; init; }
 }

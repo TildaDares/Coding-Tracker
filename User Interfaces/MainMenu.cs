@@ -55,11 +55,13 @@ public class MainMenu
                 case MainMenuOptions.FilterCodingSessionsByPeriod:
                     FilterCodingSessionsByPeriod();
                     break;
+                case MainMenuOptions.ViewCodingSessionReportByPeriod:
+                    ViewCodingSessionReportByPeriod();
+                    break;
                 case MainMenuOptions.Goals:
                     _goalMenu.Show();
                     break;
                 case MainMenuOptions.Exit:
-                case MainMenuOptions.ViewCodingSessionReportByPeriod:
                 default:
                     exit = true;
                     break;
@@ -232,7 +234,7 @@ public class MainMenu
             "[green]Enter the end date & time of sessions you want to filter in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
 
-        var filter = new CodingSessionFilter(startTime, endTime);
+        var filter = new CodingSessionFilter{ StartTime = startTime, EndTime = endTime };
         var sessions = _database.GetAllCodingSessions(filter);
         
         if (sessions.Count == 0)
@@ -243,6 +245,41 @@ public class MainMenu
         }
         
         DisplayCodingSessions(sessions,$"All coding sessions in the period {startTime} to {endTime}:");
+        Input.ContinueMenu();
+    }
+
+    private void ViewCodingSessionReportByPeriod()
+    {
+        Console.Clear();
+        if (!HasCodingSessions())
+        {
+            Input.ContinueMenu();
+            return;
+        }
+        
+        var startTime = Input.GetDateInput(
+            "[green]Enter the start date & time of sessions you want to view a report for in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
+        Console.Clear();
+        
+        var endTime = Input.GetDateInput(
+            "[green]Enter the end date & time of sessions you want to view a report for in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
+        Console.Clear();
+        
+        var filter = new CodingSessionFilter{ StartTime = startTime, EndTime = endTime };
+        var stats = _database.GetSumOfCodingSessionDuration(filter);
+        var averageHours = stats.TotalHours / stats.RecordCount;
+
+        var totalHoursText = $"Total hours of coding sessions: [yellow]{stats.TotalHours:F}[/]";
+        var averageHoursText = $"Average hours of coding sessions: [yellow]{averageHours:F}[/]";
+        
+        var panel = new Panel($"[blue]{totalHoursText}\n{averageHoursText}[/]")
+        {
+            Border = BoxBorder.Double,
+            Expand = true,
+            Header = new PanelHeader($"Report for the the coding sessions in the period {startTime} to {endTime}:")
+        };
+
+        AnsiConsole.Write(panel);
         Input.ContinueMenu();
     }
     
