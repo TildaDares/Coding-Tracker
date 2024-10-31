@@ -32,7 +32,7 @@ Coding Tracker is a C# console application designed for users to log the occurre
 - **Spectre Console**
 
 ## Features
-- Coding Tracjer: Users can log their coding sessions.
+- Coding Tracker: Users can log their coding sessions.
 - Database: Data is stored in an SQLite database. The application ensures the database and necessary tables are created on startup if they do not exist.
 - CRUD Operations: Provides functionality to create, read, update, and delete coding sessions.
 - Error Handling: Comprehensive error handling to ensure the application does not crash.
