@@ -1,4 +1,3 @@
-using CodingTracker.Enums;
 using CodingTracker.Enums.Models;
 using CodingTracker.Enums.Services;
 using CodingTracker.Infrastructure;
@@ -24,7 +23,7 @@ public class MainMenu
         var exit = false;
         while (!exit)
         {
-            // Console.Clear();
+            Console.Clear();
             AnsiConsole.MarkupLine("[b][green]Welcome to Coding Tracker![/][/]\n");
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<MainMenuOptions>()
