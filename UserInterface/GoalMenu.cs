@@ -1,3 +1,4 @@
+using System.Configuration;
 using CodingTracker.Enums.Models;
 using CodingTracker.Enums.Services;
 using CodingTracker.Infrastructure;
@@ -10,6 +11,7 @@ namespace CodingTracker.UserInterface;
 public class GoalMenu(CodingTrackerDatabase trackerDatabase)
 {
    private readonly CodingGoalsDatabase _goalsDatabase = new();
+   private static readonly string? DateFormat = ConfigurationManager.AppSettings["dateFormat"];
 
    public void Show()
    {
@@ -53,20 +55,22 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       Console.Clear();
       AnsiConsole.MarkupLine("[bold yellow]Your coding goal startTime starts counting when you successfully set a goal[/]");
       AnsiConsole.MarkupLine("[bold yellow]Your coding goal endTime must be set in the future[/]");
-      Input.ContinueMenu();
+      InputService.ContinueMenu();
+      Console.Clear();
       
       var startTime = DateTime.Now;
-      var endTime = Input.GetDateInput(
-         "[green]Enter the end date & time of your coding goal in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
+      var endTime = InputService.GetDateInput(
+         $"[green]Enter the end date & time of your coding goal in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n", minRange: startTime);
       
       var goalHours = AnsiConsole.Ask<double>("[green]Enter the number of hours of your coding goal:[/]");
       
-      var confirmation = Input.ConfirmPrompt("[yellow]Save coding goal to database?[/]");
+      var confirmation = InputService.ConfirmPrompt("[yellow]Save coding goal to database?[/]");
       if (!confirmation) return;
 
       var codingGoal = new CodingGoal { StartTime = startTime, EndTime = endTime, TotalHoursGoal = goalHours };
-      _goalsDatabase.InsertCodingGoal(codingGoal);
-      Input.ContinueMenu();
+      var rowsAffected = _goalsDatabase.InsertCodingGoal(codingGoal);
+      AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) inserted.[/]");
+      InputService.ContinueMenu();
    }
 
    private void GetCodingGoal()
@@ -74,7 +78,7 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       Console.Clear();
       if (!HasCodingGoals())
       {
-         Input.ContinueMenu();
+         InputService.ContinueMenu();
          return;
       }
     
@@ -86,7 +90,7 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       if (goal == null)
       {
          AnsiConsole.MarkupLine("[red]No coding goal found with that ID![/]");
-         Input.ContinueMenu();
+         InputService.ContinueMenu();
          return;
       }
     
@@ -105,7 +109,7 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       AnsiConsole.Write(panel);
       AnsiConsole.Write(table);
       DisplayCodingGoalDetails(goal, stats.TotalHours);
-      Input.ContinueMenu();
+      InputService.ContinueMenu();
    }
    
    private void GetCodingGoals()
@@ -115,7 +119,7 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       if (goals.Count == 0)
       {
          AnsiConsole.MarkupLine("[green]No coding goals found![/]");
-         Input.ContinueMenu();
+         InputService.ContinueMenu();
          return;
       }
       
@@ -134,7 +138,7 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       AnsiConsole.Write(panel);
       AnsiConsole.Write(table);
       AnsiConsole.MarkupLine("[bold yellow]* All rows colored [red]red[/] are [red]COMPLETED/PAST[/] goals:[/]");
-      Input.ContinueMenu();
+      InputService.ContinueMenu();
    }
    
    private void UpdateCodingGoal()
@@ -142,7 +146,7 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       Console.Clear();
       if (!HasCodingGoals())
       {
-         Input.ContinueMenu();
+         InputService.ContinueMenu();
          return;
       }
       
@@ -154,23 +158,23 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       if (goal == null)
       {
          AnsiConsole.MarkupLine("[red]No coding goal found with that ID![/]");
-         Input.ContinueMenu();
+         InputService.ContinueMenu();
          return;
       }
         
       AnsiConsole.MarkupLine("[bold yellow]Start time & date cannot be updated![/]");
-      var endTime = Input.GetDateInput(
-         "[green]Enter the updated end date & time of your coding goal in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: goal.StartTime);
+      var endTime = InputService.GetDateInput(
+         $"[green]Enter the updated end date & time of your coding goal in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n", minRange: goal.StartTime);
       
       var goalHours = AnsiConsole.Ask<double>("[green]Enter the updated number of hours of your coding goal:[/]");
 
-      var confirmation = Input.ConfirmPrompt("[yellow]Save updated coding goal to database?[/]");
+      var confirmation = InputService.ConfirmPrompt("[yellow]Save updated coding goal to database?[/]");
       if (!confirmation) return;
       
       var updatedCodingGoal = new CodingGoal { Id = goal.Id, EndTime = endTime, TotalHoursGoal = goalHours };
-      _goalsDatabase.UpdateCodingGoal(updatedCodingGoal);
-      
-      Input.ContinueMenu();
+      var rowsAffected = _goalsDatabase.UpdateCodingGoal(updatedCodingGoal);
+      AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
+      InputService.ContinueMenu();
    }
    
    private void DeleteCodingGoal()
@@ -178,17 +182,18 @@ public class GoalMenu(CodingTrackerDatabase trackerDatabase)
       Console.Clear();
       if (!HasCodingGoals())
       {
-         Input.ContinueMenu();
+         InputService.ContinueMenu();
          return;
       }
     
       GetCodingGoals();
       var id = AnsiConsole.Ask<int>("Enter the coding goal ID you wish to delete:");
-      var confirmation = Input.ConfirmPrompt("[yellow]This action is irreversible. Confirm delete?[/]");
+      var confirmation = InputService.ConfirmPrompt("[yellow]This action is irreversible. Confirm delete?[/]");
       if (!confirmation) return;
       
-      _goalsDatabase.DeleteCodingGoal(id);
-      Input.ContinueMenu();
+      var rowsAffected = _goalsDatabase.DeleteCodingGoal(id);
+      AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
+      InputService.ContinueMenu();
    }
    
    private bool HasCodingGoals()

@@ -1,5 +1,6 @@
 using System.Configuration;
 using CodingTracker.Models;
+using CodingTracker.Services;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Spectre.Console;
@@ -15,15 +16,15 @@ public class CodingTrackerDatabase
         CreateCodingTrackerDb();
     }
 
-    public void InsertCodingSession(CodingSession codingSession)
+    public int InsertCodingSession(CodingSession codingSession)
     {
         using var connection = new SqliteConnection(_connectionString);
+        var rowsAffected = 0;
         try
         {
             connection.Open();
             const string sql = "INSERT INTO codingTracker(startTime, endTime, duration) VALUES (@StartTime, @EndTime, @Duration)";
-            var rowsAffected = connection.Execute(sql, codingSession);
-            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) inserted.[/]");
+            rowsAffected = connection.Execute(sql, codingSession);
         }
         catch (SqliteException e)
         {
@@ -33,6 +34,8 @@ public class CodingTrackerDatabase
         {
             connection.Close();
         }
+
+        return rowsAffected;
     }
 
     public CodingSession GetCodingSession(int id)
@@ -113,15 +116,15 @@ public class CodingTrackerDatabase
         return sessions;
     }
 
-    public void UpdateCodingSession(CodingSession codingSession)
+    public int UpdateCodingSession(CodingSession codingSession)
     {
         using var connection = new SqliteConnection(_connectionString);
+        var rowsAffected = 0;
         try
         {
             connection.Open();
             const string sql = "UPDATE codingTracker SET startTime = @StartTime, endTime = @EndTime, duration = @Duration WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, codingSession);
-            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
+            rowsAffected = connection.Execute(sql, codingSession);
         }
         catch (SqliteException e)
         {
@@ -131,17 +134,19 @@ public class CodingTrackerDatabase
         {
             connection.Close();
         }
+
+        return rowsAffected;
     }
 
-    public void DeleteCodingSession(int id)
+    public int DeleteCodingSession(int id)
     {
         using var connection = new SqliteConnection(_connectionString);
+        var rowsAffected = 0;
         try
         {
             connection.Open();
             const string sql = "DELETE FROM codingTracker WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, new {Id = id});
-            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
+            rowsAffected = connection.Execute(sql, new {Id = id});
         }
         catch (SqliteException e)
         {
@@ -151,6 +156,8 @@ public class CodingTrackerDatabase
         {
             connection.Close();
         }
+        
+        return rowsAffected;
     }
     
     public long CountCodingSessions()
@@ -217,8 +224,8 @@ public class CodingTrackerDatabase
 
             for (var i = 0; i < 15; i++)
             {
-                var startTime = Utilities.GetRandomDateTime(rand);
-                var endTime = Utilities.GetRandomDateTime(rand, startTime);
+                var startTime = SeederService.GetRandomDateTime();
+                var endTime = SeederService.GetRandomDateTime(startTime);
                 const string sql = "INSERT INTO codingTracker(startTime, endTime, duration) VALUES (@StartTime, @EndTime, @Duration)";
                 
                var codingSession = new CodingSession(startTime, endTime);

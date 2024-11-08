@@ -1,5 +1,6 @@
 using System.Configuration;
 using CodingTracker.Models;
+using CodingTracker.Services;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Spectre.Console;
@@ -15,15 +16,15 @@ public class CodingGoalsDatabase
         CreateCodingGoalDb();
     }
 
-    public void InsertCodingGoal(CodingGoal codingGoal)
+    public int InsertCodingGoal(CodingGoal codingGoal)
     {
         using var connection = new SqliteConnection(_connectionString);
+        var rowsAffected = 0;
         try
         {
             connection.Open();
             const string sql = "INSERT INTO codingGoal(startTime, endTime, totalHoursGoal) VALUES (@StartTime, @EndTime, @TotalHoursGoal)";
-            var rowsAffected = connection.Execute(sql, codingGoal);
-            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) inserted.[/]");
+            rowsAffected = connection.Execute(sql, codingGoal);
         }
         catch (SqliteException e)
         {
@@ -33,6 +34,8 @@ public class CodingGoalsDatabase
         {
             connection.Close();
         }
+
+        return rowsAffected;
     }
 
     public CodingGoal GetCodingGoal(CodingGoal codingGoal)
@@ -79,15 +82,15 @@ public class CodingGoalsDatabase
         return goals;
     }
 
-    public void UpdateCodingGoal(CodingGoal codingGoal)
+    public int UpdateCodingGoal(CodingGoal codingGoal)
     {
         using var connection = new SqliteConnection(_connectionString);
+        var rowsAffected = 0;
         try
         {
             connection.Open();
             const string sql = "UPDATE codingGoal SET endTime = @EndTime, totalHoursGoal = @TotalHoursGoal WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, codingGoal);
-            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
+            rowsAffected = connection.Execute(sql, codingGoal);
         }
         catch (SqliteException e)
         {
@@ -97,17 +100,19 @@ public class CodingGoalsDatabase
         {
             connection.Close();
         }
+        
+        return rowsAffected;
     }
 
-    public void DeleteCodingGoal(int id)
+    public int DeleteCodingGoal(int id)
     {
         using var connection = new SqliteConnection(_connectionString);
+        var rowsAffected = 0;
         try
         {
             connection.Open();
             const string sql = "DELETE FROM codingGoal WHERE id = @Id";
-            var rowsAffected = connection.Execute(sql, new {Id = id});
-            AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
+            rowsAffected = connection.Execute(sql, new {Id = id});
         }
         catch (SqliteException e)
         {
@@ -117,6 +122,8 @@ public class CodingGoalsDatabase
         {
             connection.Close();
         }
+
+        return rowsAffected;
     }
     
     public long CountCodingGoals()
@@ -183,8 +190,8 @@ public class CodingGoalsDatabase
 
             for (var i = 0; i < 5; i++)
             {
-                var startTime = Utilities.GetRandomDateTime(rand);
-                var endTime = Utilities.GetRandomDateTime(rand, startTime);
+                var startTime = SeederService.GetRandomDateTime();
+                var endTime = SeederService.GetRandomDateTime(startTime);
                 var totalHoursGoal = rand.NextDouble() * 100;
                 const string sql = "INSERT INTO codingGoal(startTime, endTime, totalHoursGoal) VALUES (@StartTime, @EndTime, @TotalHoursGoal)";
                 

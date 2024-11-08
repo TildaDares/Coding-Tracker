@@ -1,3 +1,4 @@
+using System.Configuration;
 using CodingTracker.Enums.Models;
 using CodingTracker.Enums.Services;
 using CodingTracker.Infrastructure;
@@ -11,6 +12,7 @@ public class MainMenu
 {
     private readonly CodingTrackerDatabase _database;
     private readonly GoalMenu _goalMenu;
+    private static readonly string? DateFormat = ConfigurationManager.AppSettings["dateFormat"];
     
     public MainMenu()
     {
@@ -71,20 +73,19 @@ public class MainMenu
     private void InsertCodingSession()
     {
         Console.Clear();
-        var startTime = Input.GetDateInput(
-            "[green]Enter the start date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
+        var startTime = InputService.GetDateInput(
+            $"[green]Enter the start date & time of your coding log in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n");
         
-        Console.Clear();
-        var endTime = Input.GetDateInput(
-            "[green]Enter the end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
-        Console.Clear();
+        var endTime = InputService.GetDateInput(
+            $"[green]Enter the end date & time of your coding log in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n", minRange: startTime);
 
-        var confirmation = Input.ConfirmPrompt("[yellow]Save coding session to database?[/]");
+        var confirmation = InputService.ConfirmPrompt("[yellow]Save coding session to database?[/]");
         if (!confirmation) return;
         
         var codingSession = new CodingSession(startTime, endTime);
-        _database.InsertCodingSession(codingSession);
-        Input.ContinueMenu();
+        var rowsAffected = _database.InsertCodingSession(codingSession);
+        AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) inserted.[/]");
+        InputService.ContinueMenu();
     }
 
     private void GetCodingSession()
@@ -92,7 +93,7 @@ public class MainMenu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
     
@@ -103,7 +104,7 @@ public class MainMenu
         if (session == null)
         {
             AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
     
@@ -118,7 +119,7 @@ public class MainMenu
         BuildTableRows(table, session);
         AnsiConsole.Write(panel);
         AnsiConsole.Write(table);
-        Input.ContinueMenu();
+        InputService.ContinueMenu();
     }
     
     private void GetCodingSessions()
@@ -128,12 +129,12 @@ public class MainMenu
         if (sessions.Count == 0)
         {
             AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
 
         DisplayCodingSessions(sessions, "All coding sessions:");
-        Input.ContinueMenu();
+        InputService.ContinueMenu();
     }
 
     private void UpdateCodingSession()
@@ -141,7 +142,7 @@ public class MainMenu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
     
@@ -152,27 +153,26 @@ public class MainMenu
         if (codingSession == null)
         {
             AnsiConsole.MarkupLine("[red]No coding session found with that ID![/]");
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
         
-        var startTime = Input.GetDateInput(
-            "[green]Enter the updated start date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
-        Console.Clear();
+        var startTime = InputService.GetDateInput(
+            $"[green]Enter the updated start date & time of your coding log in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n");
         
-        var endTime = Input.GetDateInput(
-            "[green]Enter the updated end date & time of your coding log in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
-        Console.Clear();
+        var endTime = InputService.GetDateInput(
+            $"[green]Enter the updated end date & time of your coding log in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n", minRange: startTime);
         
-        var confirmation = Input.ConfirmPrompt("[yellow]Save updated coding session to database?[/]");
+        var confirmation = InputService.ConfirmPrompt("[yellow]Save updated coding session to database?[/]");
         if (!confirmation) return;
         
         var updatedSession = new CodingSession(startTime, endTime)
         {
             Id = id
         };
-        _database.UpdateCodingSession(updatedSession);
-        Input.ContinueMenu();
+        var rowsAffected = _database.UpdateCodingSession(updatedSession);
+        AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) updated.[/]");
+        InputService.ContinueMenu();
     }
 
     private void DeleteCodingSession()
@@ -180,17 +180,18 @@ public class MainMenu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
     
         GetCodingSessions();
         var id = AnsiConsole.Ask<int>("Enter the coding session ID you wish to delete:");
-        var confirmation = Input.ConfirmPrompt("[yellow]This action is irreversible. Confirm delete?[/]");
+        var confirmation = InputService.ConfirmPrompt("[yellow]This action is irreversible. Confirm delete?[/]");
         if (!confirmation) return;
         
-        _database.DeleteCodingSession(id);
-        Input.ContinueMenu();
+        var rowsAffected = _database.DeleteCodingSession(id);
+        AnsiConsole.MarkupLine($"[green]{rowsAffected} row(s) deleted.[/]");
+        InputService.ContinueMenu();
     }
 
     private void StartCodingSession()
@@ -203,17 +204,17 @@ public class MainMenu
         stopwatchService.Stop();
         AnsiConsole.MarkupLine($"[green]You ran the coding session for: {stopwatchService.Duration}...[/]");
         
-        var confirmation = Input.ConfirmPrompt("[yellow]Save coding session to database?[/]");
+        var confirmation = InputService.ConfirmPrompt("[yellow]Save coding session to database?[/]");
         if (!confirmation)
         {
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
 
         Console.Clear();
         var codingSession = new CodingSession(stopwatchService.StartTime, stopwatchService.EndTime);
         _database.InsertCodingSession(codingSession);
-        Input.ContinueMenu();
+        InputService.ContinueMenu();
     }
 
     private void FilterCodingSessionsByPeriod()
@@ -221,16 +222,16 @@ public class MainMenu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
         
-        var startTime = Input.GetDateInput(
-            "[green]Enter the start date & time of sessions you want to filter in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
+        var startTime = InputService.GetDateInput(
+            $"[green]Enter the start date & time of sessions you want to filter in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n");
         Console.Clear();
         
-        var endTime = Input.GetDateInput(
-            "[green]Enter the end date & time of sessions you want to filter in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
+        var endTime = InputService.GetDateInput(
+            $"[green]Enter the end date & time of sessions you want to filter in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
 
         var filter = new CodingSessionFilter{ StartTime = startTime, EndTime = endTime };
@@ -239,12 +240,12 @@ public class MainMenu
         if (sessions.Count == 0)
         {
             AnsiConsole.MarkupLine("[green]No coding sessions found![/]");
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
         
         DisplayCodingSessions(sessions,$"All coding sessions in the period {startTime} to {endTime}:");
-        Input.ContinueMenu();
+        InputService.ContinueMenu();
     }
 
     private void ViewCodingSessionReportByPeriod()
@@ -252,16 +253,16 @@ public class MainMenu
         Console.Clear();
         if (!HasCodingSessions())
         {
-            Input.ContinueMenu();
+            InputService.ContinueMenu();
             return;
         }
         
-        var startTime = Input.GetDateInput(
-            "[green]Enter the start date & time of sessions you want to view a report for in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n");
+        var startTime = InputService.GetDateInput(
+            $"[green]Enter the start date & time of sessions you want to view a report for in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n");
         Console.Clear();
         
-        var endTime = Input.GetDateInput(
-            "[green]Enter the end date & time of sessions you want to view a report for in the format[/] [blue]dd/mm/yyyy HH:mm (24-hour format only)[/]:\n", minRange: startTime);
+        var endTime = InputService.GetDateInput(
+            $"[green]Enter the end date & time of sessions you want to view a report for in the format[/] [blue]{DateFormat} (24-hour format only)[/]:\n", minRange: startTime);
         Console.Clear();
         
         var filter = new CodingSessionFilter{ StartTime = startTime, EndTime = endTime };
@@ -279,7 +280,7 @@ public class MainMenu
         };
 
         AnsiConsole.Write(panel);
-        Input.ContinueMenu();
+        InputService.ContinueMenu();
     }
     
     private bool HasCodingSessions()
