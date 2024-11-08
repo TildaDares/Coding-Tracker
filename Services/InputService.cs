@@ -1,14 +1,12 @@
 using CodingTracker.Models;
-using CodingTracker.Services;
 using Spectre.Console;
 
-namespace CodingTracker;
+namespace CodingTracker.Services;
 
-public static class Input
+public static class InputService
 {
     public static DateTime GetDateInput(string message, DateTime? minRange = null, DateTime? maxRange = null)
     {
-        Console.Clear();
         var validator = new Validator();
         AnsiConsole.Prompt(
             new TextPrompt<string>(message)
